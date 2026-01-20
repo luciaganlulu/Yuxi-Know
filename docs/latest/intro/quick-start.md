@@ -80,6 +80,26 @@ docker compose up --build -d
 
 **注意**：启动后，可能还需要一些时间，尤其是后端服务需要一段时间，请耐心等待 2-3 分钟。
 
+##### 无 Docker 启动（pip 安装）
+
+如果云平台无法使用 Docker，可通过 pip 安装后启动后端服务：
+
+```bash
+cp .env.template .env
+pip install -e .
+yuxi-know-api
+```
+
+前端开发可在本地启动：
+
+```bash
+cd web
+npm install
+npm run dev -- --host
+```
+
+> 如需连接 Milvus / Neo4j / MinIO，请在 `.env` 中配置外部服务地址。
+
 #### 4. 访问系统
 
 服务启动完成后，访问以下地址：
