@@ -66,6 +66,9 @@ dependencies = [
     "docling>=2.68.0",
     "loguru>=0.7.3",
 ]
+
+[project.scripts]
+yuxi-know-api = "server.cli:main"
 [tool.ruff]
 line-length = 120  # 代码最大行宽
 lint.select = [         # 选择的规则
@@ -115,3 +118,10 @@ test = [
     "pytest-httpx>=0.32.0",
     "pytest-cov>=6.0.0",
 ]
+
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["server*", "src*"]
