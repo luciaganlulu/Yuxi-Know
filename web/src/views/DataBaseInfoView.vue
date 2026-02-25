@@ -140,7 +140,7 @@ const state = computed(() => store.state)
 // 计算属性：是否支持知识图谱
 const isGraphSupported = computed(() => {
   const kbType = database.value.kb_type?.toLowerCase()
-  return kbType === 'lightrag'
+  return kbType === 'lightrag' || kbType === 'raganything'
 })
 
 // 计算属性：是否支持评估功能

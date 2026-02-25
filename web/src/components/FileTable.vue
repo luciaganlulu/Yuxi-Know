@@ -494,7 +494,10 @@ const props = defineProps({
 const emit = defineEmits(['showAddFilesModal', 'toggleRightPanel'])
 
 const files = computed(() => Object.values(store.database.files || {}))
-const isLightRAG = computed(() => store.database?.kb_type?.toLowerCase() === 'lightrag')
+const isLightRAG = computed(() => {
+  const kbType = store.database?.kb_type?.toLowerCase()
+  return kbType === 'lightrag' || kbType === 'raganything'
+})
 const refreshing = computed(() => store.state.refrashing)
 const lock = computed(() => store.state.lock)
 const batchDeleting = computed(() => store.state.batchDeleting)

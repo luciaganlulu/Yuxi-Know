@@ -60,8 +60,8 @@
           :rows="4"
         />
       </a-form-item>
-      <!-- 仅对 LightRAG 类型显示 LLM 配置 -->
-      <a-form-item v-if="database.kb_type === 'lightrag'" label="语言模型 (LLM)" name="llm_info">
+      <!-- 仅对 LightRAG/RagAnything 类型显示 LLM 配置 -->
+      <a-form-item v-if="database.kb_type === 'lightrag' || database.kb_type === 'raganything'" label="语言模型 (LLM)" name="llm_info">
         <ModelSelectorComponent
           :model_spec="llmModelSpec"
           placeholder="请选择模型"
@@ -112,8 +112,8 @@ const backToDatabase = () => {
 const showEditModal = () => {
   editForm.name = database.value.name || ''
   editForm.description = database.value.description || ''
-  // 如果是 LightRAG 类型，加载当前的 LLM 配置
-  if (database.value.kb_type === 'lightrag') {
+  // 如果是 LightRAG 或 RagAnything 类型，加载当前的 LLM 配置
+  if (database.value.kb_type === 'lightrag' || database.value.kb_type === 'raganything') {
     const llmInfo = database.value.llm_info || {}
     editForm.llm_info.provider = llmInfo.provider || ''
     editForm.llm_info.model_name = llmInfo.model_name || ''
@@ -130,8 +130,8 @@ const handleEditSubmit = () => {
         description: editForm.description
       }
 
-      // 如果是 LightRAG 类型，包含 llm_info
-      if (database.value.kb_type === 'lightrag') {
+      // 如果是 LightRAG 或 RagAnything 类型，包含 llm_info
+      if (database.value.kb_type === 'lightrag' || database.value.kb_type === 'raganything') {
         updateData.llm_info = {
           provider: editForm.llm_info.provider,
           model_name: editForm.llm_info.model_name

@@ -25,6 +25,7 @@ dependencies = [
     "langgraph-cli[inmem]>=0.4",
     "langsmith>=0.4",
     "lightrag-hku>=1.4.6",
+    "raganything>=1.2.9",
     "llama-index>=0.14",
     "llama-index-readers-file>=0.4.7",
     "markdownify>=1.1.0",

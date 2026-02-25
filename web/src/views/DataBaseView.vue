@@ -55,16 +55,18 @@
         placeholder="请选择嵌入模型"
       />
 
-      <!-- 仅对 LightRAG 提供语言选择和LLM选择 -->
-      <div v-if="newDatabase.kb_type === 'lightrag'">
-        <h3 style="margin-top: 20px">语言</h3>
-        <a-select
-          v-model:value="newDatabase.language"
-          :options="languageOptions"
-          style="width: 100%"
-          size="large"
-          :dropdown-match-select-width="false"
-        />
+      <!-- 对 LightRAG 和 RagAnything 提供语言选择和LLM选择 -->
+      <div v-if="newDatabase.kb_type === 'lightrag' || newDatabase.kb_type === 'raganything'">
+        <div v-if="newDatabase.kb_type === 'lightrag'">
+          <h3 style="margin-top: 20px">语言</h3>
+          <a-select
+            v-model:value="newDatabase.language"
+            :options="languageOptions"
+            style="width: 100%"
+            size="large"
+            :dropdown-match-select-width="false"
+          />
+        </div>
 
         <h3 style="margin-top: 20px">语言模型 (LLM)</h3>
         <p style="color: var(--gray-700); font-size: 14px">可以在设置中配置语言模型</p>
@@ -356,8 +358,10 @@ const buildRequestData = () => {
     }
   }
 
-  if (newDatabase.kb_type === 'lightrag') {
-    requestData.additional_params.language = newDatabase.language || 'English'
+  if (newDatabase.kb_type === 'lightrag' || newDatabase.kb_type === 'raganything') {
+    if (newDatabase.kb_type === 'lightrag') {
+      requestData.additional_params.language = newDatabase.language || 'English'
+    }
     if (newDatabase.llm_info.provider && newDatabase.llm_info.model_name) {
       requestData.llm_info = {
         provider: newDatabase.llm_info.provider,
