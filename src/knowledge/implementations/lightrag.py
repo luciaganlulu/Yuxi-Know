@@ -441,17 +441,49 @@ class LightRagKB(KnowledgeBase):
             query_params = query_params | kwargs
             filtered_kwargs = {k: v for k, v in query_params.items() if k in valid_params}
 
+            # 读取重排序参数
+            use_reranker = bool(query_params.get("use_reranker", False))
+            reranker_model = query_params.get("reranker_model")
+
             # 设置查询参数
             params_dict = {
                 "mode": "mix",
                 "only_need_context": True,
                 "top_k": 10,
             } | filtered_kwargs
+            original_top_k = int(params_dict.get("top_k", 10))
+
+            # 如果启用重排序，使用 recall_top_k 替换 top_k 以召回更多候选
+            if use_reranker and reranker_model:
+                recall_top_k = int(query_params.get("recall_top_k", 50))
+                params_dict["top_k"] = max(recall_top_k, original_top_k)
+
             param = QueryParam(**params_dict)
 
             # 执行查询
             response = await rag.aquery_data(query_text, param)
             logger.debug(f"Query response: {str(response)[:1000]}...")
+
+            # 重排序逻辑
+            if use_reranker and reranker_model and isinstance(response, dict):
+                data = response.get("data", {}) or {}
+                chunks = data.get("chunks", [])
+                if chunks:
+                    try:
+                        from src.models.rerank import get_reranker
+
+                        reranker = get_reranker(reranker_model)
+                        try:
+                            documents_text = [chunk.get("content", "") for chunk in chunks]
+                            rerank_scores = await reranker.acompute_score([query_text, documents_text])
+                            for chunk, score in zip(chunks, rerank_scores):
+                                chunk["rerank_score"] = float(score)
+                            chunks.sort(key=lambda x: x.get("rerank_score", 0.0), reverse=True)
+                        finally:
+                            await reranker.aclose()
+                    except Exception as exc:
+                        logger.error(f"Reranking failed: {exc}, falling back to top_k slicing")
+                    response["data"]["chunks"] = chunks[:original_top_k]
 
             if agent_call:
                 scope = query_params.get("retrieval_content_scope", "chunks")
@@ -618,7 +650,37 @@ class LightRagKB(KnowledgeBase):
                     {"value": "all", "label": "全部", "description": "返回文档片段和知识图谱信息"},
                 ],
             },
+            {
+                "key": "use_reranker",
+                "label": "启用重排序",
+                "type": "boolean",
+                "default": False,
+                "description": "是否使用精排模型对检索结果进行重排序",
+            },
+            {
+                "key": "recall_top_k",
+                "label": "召回数量",
+                "type": "number",
+                "default": 50,
+                "min": 10,
+                "max": 200,
+                "description": "向量检索时保留的候选数量（启用重排序时有效）",
+            },
         ]
+
+        # 动态添加 reranker 模型选择
+        reranker_names = kwargs.get("reranker_names", {})
+        if reranker_names:
+            options.append(
+                {
+                    "key": "reranker_model",
+                    "label": "重排序模型",
+                    "type": "select",
+                    "default": "",
+                    "options": [{"label": info.name, "value": model_id} for model_id, info in reranker_names.items()],
+                    "description": "选择用于本次查询的重排序模型",
+                }
+            )
 
         return {"type": "lightrag", "options": options}
 
